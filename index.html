@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -6,7 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Investigating the Effect of Pulling Velocity on the Formation of Tape Stripes</title>
     <style>
-        
+        /* ========================================== */
+        /* ★ 網頁整體背景控制區 (自訂背景與透明度) ★  */
+        /* ========================================== */
         .page-bg {
             position: fixed;
             top: 0;
@@ -49,7 +50,7 @@
             box-sizing: border-box;
         }
 
-      
+        /* 儀表板排版 */
         .dashboard {
             display: flex;
             flex-direction: row; 
@@ -187,7 +188,7 @@
             padding: 0 10px;
         }
         .rec-dot { position: absolute; top: 10px; right: 15px; color: #ff4757; font-weight: bold; font-size: 14px; animation: blink 1s infinite; z-index: 10;}
-        .speed-display { position: absolute; top: 10px; left: 15px; color: #2ed573; font-family: monospace; font-size: 14px; z-index: 10;}
+        .speed-display { position: absolute; top: 10px; left: 15px; color: #2ed573; font-family: monospace; font-size: 14px; z-index: 10; font-weight: bold;}
         @keyframes blink { 50% { opacity: 0; } }
 
         .tape-track {
@@ -201,7 +202,6 @@
             background-color: rgba(136, 136, 136, 0.2); 
         }
         
-        /* 膠帶本體：初始完全在右側視野外 (translateX(100%)) */
         .tape-stripes { 
             position: absolute;
             left: 0;
@@ -237,7 +237,6 @@
             line-height: 1.6;
         }
 
-        /* 響應式排版 */
         @media (max-width: 1200px) {
             .dashboard {
                 flex-direction: column;
@@ -300,7 +299,7 @@
 
     <div class="content-wrapper">
         <div class="dashboard">
-            <!-- 左側/主控制台 -->
+            
             <div class="simulation-panel">
                 <h3 style="margin:0; color:#333; align-self: flex-start;">Simulation Console</h3>
                 
@@ -333,10 +332,13 @@
                     <input type="number" id="delayInput" value="212">
                     <span style="color:#333; font-weight:bold;">ms</span>
                     <button id="startBtn">Start</button>
+                    
+                    <div id="error-msg" style="display: none; color: #ff4757; font-weight: bold; width: 100%; text-align: center; margin-top: 10px;">
+                        Invalid Step Delay! Please enter a positive integer greater than 0.
+                    </div>
                 </div>
-            </div>
+            </div> <!-- 這裡補回了 simulation-panel 的結尾 -->
 
-            <!-- 右側/攝影機 -->
             <div class="camera-panel">
                 <h3 style="margin:0; color:#333;">Micro-Camera</h3>
                 <div class="camera-screen">
@@ -352,6 +354,7 @@
                     <strong>Transparent Zone (Slip):</strong> Clear band from rapid, clean detachment.
                 </div>
             </div>
+            
         </div>
     </div>
 
@@ -371,6 +374,7 @@
         const delayInput = document.getElementById('delayInput');
         const startBtn = document.getElementById('startBtn');
         const speedDisplay = document.getElementById('speed-display');
+        const errorMsg = document.getElementById('error-msg');
         
         const cart = document.getElementById('cart');
         const pulleyBottom = document.getElementById('pulley-bottom');
@@ -404,8 +408,16 @@
         let timer = null;
 
         function updateTapeAppearance() {
-            let delay = parseInt(delayInput.value) || 30;
-            if (delay <= 0) delay = 1;
+            let delay = parseInt(delayInput.value);
+
+            if (isNaN(delay) || delay <= 0) {
+                speedDisplay.textContent = 'Invalid';
+                speedDisplay.style.color = '#ff4757'; 
+                tapeStripes.style.background = 'transparent'; 
+                return;
+            } else {
+                speedDisplay.style.color = '#2ed573'; 
+            }
 
             let speed = 4.625 / delay;
             speedDisplay.textContent = speed.toFixed(4) + ' cm/s';
@@ -442,12 +454,10 @@
             tapeDispenser.style.left = tapeDispX + 'px';
             tapeDispenser.style.top = tapeDispY + 'px';
             
-         
             let distanceMoved = -70 - cartX; 
-            let progress = distanceMoved / 100; // 0 到 1
+            let progress = distanceMoved / 100; 
             if (progress < 0) progress = 0;
             if (progress > 1) progress = 1;
-            
             
             let translatePercent = (1 - progress) * 100;
             tapeStripes.style.transform = `translateX(${translatePercent}%)`;
@@ -457,14 +467,21 @@
         }
 
         startBtn.addEventListener('click', () => {
+            let delay = parseInt(delayInput.value);
+    
+            if (isNaN(delay) || delay <= 0) {
+                errorMsg.style.display = 'block';
+                return;
+            }
+    
+            errorMsg.style.display = 'none';
+
             if (isRunning) {
-              
                 isRunning = false;
                 startBtn.textContent = 'Start';
                 startBtn.style.backgroundColor = '#0076ff';
                 clearTimeout(timer);
             } else {
-                
                 cartX = -70;            
                 movableX = 266;
                 wheelX = initialWheelX;  
@@ -474,7 +491,7 @@
                 isRunning = true;
                 startBtn.textContent = 'Stop';
                 startBtn.style.backgroundColor = '#ff3b30';
-                
+        
                 updateTapeAppearance(); 
                 runSimulation();
             }
