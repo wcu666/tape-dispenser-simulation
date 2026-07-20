@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -5,9 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Investigating the Effect of Pulling Velocity on the Formation of Tape Stripes</title>
     <style>
-        /* ========================================== */
-        /* ★ 網頁整體背景控制區 (自訂背景與透明度) ★  */
-        /* ========================================== */
+        
         .page-bg {
             position: fixed;
             top: 0;
@@ -50,7 +49,7 @@
             box-sizing: border-box;
         }
 
-        /* 儀表板排版 (預設為電腦版：左右排列) */
+      
         .dashboard {
             display: flex;
             flex-direction: row; 
@@ -69,10 +68,9 @@
             display: flex;
             flex-direction: column;
             gap: 20px;
-            align-items: center; /* 讓內容置中 */
+            align-items: center;
         }
 
-        /* ★ 新增：縮放控制外層，負責保留縮放後的空間 ★ */
         .simulation-wrapper {
             position: relative;
             width: 800px;
@@ -81,7 +79,6 @@
             margin: 0 auto;
         }
 
-        /* 模擬裝置外框 */
         .simulation-container {
             position: absolute;
             top: 0;
@@ -92,7 +89,7 @@
             border-radius: 8px;
             overflow: hidden; 
             background-color: #ffffff; 
-            transform-origin: top left; /* 讓縮放以左上角為基準 */
+            transform-origin: top left;
         }
 
         .bg-layer {
@@ -203,10 +200,16 @@
             overflow: hidden;
             background-color: rgba(136, 136, 136, 0.2); 
         }
+        
+        /* 膠帶本體：初始完全在右側視野外 (translateX(100%)) */
         .tape-stripes { 
-            width: 200%; 
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 100%; 
             height: 100%; 
-            transform: translateX(0); 
+            transform: translateX(100%); 
+            transition: none;
         }
 
         .site-footer {
@@ -234,11 +237,7 @@
             line-height: 1.6;
         }
 
-        /* ======================================= */
-        /* ★ 神級 RWD 響應式排版 (解決你的手機痛點) ★ */
-        /* ======================================= */
-        
-        /* 1. 當螢幕不夠寬時 (平板與直向手機) -> 強制上下排列，模擬器在上 */
+        /* 響應式排版 */
         @media (max-width: 1200px) {
             .dashboard {
                 flex-direction: column;
@@ -247,7 +246,6 @@
             .footer-text { text-align: center; }
         }
 
-        /* 2. 手機螢幕逐步縮小，按比例微縮放模擬器 (消滅滾動條！) */
         @media (max-width: 860px) {
             .simulation-wrapper { width: 640px; height: 256px; }
             .simulation-container { transform: scale(0.8); }
@@ -265,20 +263,32 @@
             .simulation-container { transform: scale(0.375); }
         }
 
-        /* 3. 手機拿橫的 (Landscape) -> 恢復成左右排列，並微縮放以塞進螢幕高度 */
         @media (max-height: 500px) and (orientation: landscape) {
             .dashboard {
-                flex-direction: row; /* 強制左右排列 */
-                flex-wrap: nowrap; /* 不准換行 */
+                flex-direction: row;
+                flex-wrap: nowrap;
                 align-items: center;
             }
-            /* 模擬器縮小到一半 */
             .simulation-wrapper { width: 400px; height: 160px; }
             .simulation-container { transform: scale(0.5); }
-            /* 攝影機也稍微變窄適應版面 */
             .camera-panel { width: 260px; }
             .camera-screen { height: 160px; }
             .tape-track { height: 80px; }
+        }
+
+        .tape-legend {
+            font-family: 'Times New Roman', Times, serif;
+            font-size: 14.5px;
+            color: #333;
+            background-color: #f8f9fa;
+            padding: 12px;
+            border-radius: 8px;
+            border: 1px solid #e9ecef;
+            line-height: 1.5;
+            text-align: left;
+        }
+        .tape-legend strong {
+            color: #000;
         }
     </style>
 </head>
@@ -294,7 +304,6 @@
             <div class="simulation-panel">
                 <h3 style="margin:0; color:#333; align-self: flex-start;">Simulation Console</h3>
                 
-                <!-- ★ 用來完美縮放的 Wrapper ★ -->
                 <div class="simulation-wrapper">
                     <div class="simulation-container">
                         <img src="bg1.png" class="bg-layer" id="bg1">
@@ -333,15 +342,19 @@
                 <div class="camera-screen">
                     <div class="rec-dot">● REC</div>
                     <div class="speed-display" id="speed-display">0.00 cm/s</div>
-                    <div class="tape-track">
+                    <div class="tape-track" id="tape-track">
                         <div class="tape-stripes" id="tape-stripes"></div>
                     </div>
+                </div>
+                
+                <div class="tape-legend">
+                    <strong>White Zone (Stick):</strong> Opaque band from polymer fibrillation.<br>
+                    <strong>Transparent Zone (Slip):</strong> Clear band from rapid, clean detachment.
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- 版權宣告區塊 -->
     <footer class="site-footer">
         <div class="footer-content">
             <img src="ccu-logo.png" alt="CCU Physics Logo" class="footer-logo">
@@ -387,7 +400,6 @@
         const movableY = -85;       
         
         let fixedAngle = 0;         
-        let stripePos = 0;          
         let isRunning = false;
         let timer = null;
 
@@ -430,25 +442,34 @@
             tapeDispenser.style.left = tapeDispX + 'px';
             tapeDispenser.style.top = tapeDispY + 'px';
             
+         
+            let distanceMoved = -70 - cartX; 
+            let progress = distanceMoved / 100; // 0 到 1
+            if (progress < 0) progress = 0;
+            if (progress > 1) progress = 1;
+            
+            
+            let translatePercent = (1 - progress) * 100;
+            tapeStripes.style.transform = `translateX(${translatePercent}%)`;
+
             drawAllLines();
             updateTapeAppearance(); 
         }
 
         startBtn.addEventListener('click', () => {
             if (isRunning) {
+              
                 isRunning = false;
                 startBtn.textContent = 'Start';
                 startBtn.style.backgroundColor = '#0076ff';
                 clearTimeout(timer);
             } else {
-                if (cartX <= stopCartX) {
-                    cartX = -70;            
-                    movableX = 266;
-                    wheelX = initialWheelX;  
-                    fixedAngle = 0;         
-                    stripePos = 0;          
-                    initPositions();        
-                }
+                
+                cartX = -70;            
+                movableX = 266;
+                wheelX = initialWheelX;  
+                fixedAngle = 0;         
+                initPositions(); 
 
                 isRunning = true;
                 startBtn.textContent = 'Stop';
@@ -465,17 +486,26 @@
             cartX -= 2;             
             movableX -= 2;          
             wheelX -= 2;   
-
             fixedAngle -= 5;        
-            stripePos -= 4; 
+
+            let distanceMoved = -70 - cartX; 
+            let progress = distanceMoved / 100; 
+            if (progress > 1) progress = 1;
+
+            let translatePercent = (1 - progress) * 100;
+            tapeStripes.style.transform = `translateX(${translatePercent}%)`;
 
             if (cartX <= stopCartX) {
                 cartX = stopCartX;
                 movableX = 266 - (-70 - stopCartX);
                 wheelX = initialWheelX - (-70 - stopCartX); 
+                tapeStripes.style.transform = `translateX(0%)`;
+                
                 isRunning = false;
-                startBtn.textContent = 'Restart'; 
+                startBtn.textContent = 'Start'; 
                 startBtn.style.backgroundColor = '#0076ff';
+                clearTimeout(timer);
+                return;
             }
 
             cart.style.left = cartX + 'px';
@@ -486,8 +516,6 @@
             pulleyTop.style.transform = `rotate(${fixedAngle}deg)`;
             tapeDispenser.style.transform = `rotate(${fixedAngle}deg)`; 
             wheel.style.transform = `rotate(${-fixedAngle}deg)`;        
-
-            tapeStripes.style.transform = `translateX(${stripePos % 40}px)`;
 
             drawAllLines();
 
