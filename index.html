@@ -417,7 +417,7 @@
             }
 
             let speed = 4.625 / delay;
-            speedDisplay.textContent = speed.toFixed(4) + ' cm/s';
+            speedDisplay.textContent = speed*10.toFixed(4) + ' mm/s';
 
             if (delay >= 400) {
                 tapeStripes.style.background = '#ffffff';
