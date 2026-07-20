@@ -1,27 +1,70 @@
 <!DOCTYPE html>
-<html lang="zh-TW">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>膠帶台實驗儀表板</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Investigating the Effect of Pulling Velocity on the Formation of Tape Stripes</title>
     <style>
+        
+        .page-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+           
+            background-image: url('https://images.unsplash.com/photo-1579546929518-9e396f3cc809?q=80&w=2000'); 
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+          
+            opacity: 0.2; 
+        }
+
         body {
-            background-color: hsl(0, 0%, 100%);
-            color: #ffffff;
+            background-color: #f4f6f8; /* 淺灰底色，取代原本的黑色 */
+            color: #333333; /* 改為深灰色字體 */
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             margin: 0;
             display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
+            flex-direction: column;
+            min-height: 100vh;
         }
 
+        /* 頂部標題 */
+        .main-title {
+            font-family: 'Times New Roman', Times, serif;
+            text-align: center;
+            margin: 30px 20px 10px 20px;
+            font-size: 28px;
+            color: #1a252f; /* 深藍/黑色 */
+            text-shadow: 1px 1px 2px rgba(255,255,255,0.8);
+        }
+
+        /* 主內容區塊，確保 Footer 永遠被推到最下方 */
+        .content-wrapper {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        /* 儀表板：讓面板並排 (row) */
         .dashboard {
             display: flex;
-            gap: 20px;
-            background-color: hwb(0 100% 0%);
+            flex-direction: row; /* 確保主控台和監視器是左右排列 */
+            flex-wrap: wrap;     /* 如果螢幕太小才會換行 */
+            justify-content: center;
+            align-items: flex-start; /* 讓兩邊的面板頂部對齊 */
+            gap: 30px;
+            background-color: #ffffff; /* 白底，看起來更乾淨 */
             padding: 30px;
             border-radius: 12px;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1); /* 柔和的陰影 */
+            max-width: 100%;
         }
 
         .simulation-panel {
@@ -35,10 +78,11 @@
             position: relative;
             width: 800px;  
             height: 320px; 
-            border: 2px solid #121212;
+            border: 2px solid #ccc; /* 淺色邊框 */
             border-radius: 8px;
-            overflow: visible;
-            background-color: #fffdfd; 
+            /* ★ 關鍵修正：hidden 可以防止裡面的零件跑出去撐大網頁，解決框框移動的問題 ★ */
+            overflow: hidden; 
+            background-color: #ffffff; 
         }
 
         /* 背景與零件共用基礎設定 */
@@ -67,44 +111,64 @@
             pointer-events: none;
         }
 
-        /* ========================================== */
-        /* ★ 獨立圖層 (z-index) 控制區 ★               */
-        /* ========================================== */
         #bg2 { z-index: 1; } 
         #bg1 { z-index: 3; } 
         #bg3 { z-index: 5; } 
-
         #line-canvas { z-index: 4; }
-
-        #cart            { z-index: 2; width: 815px; }
-        #pulley-bottom   { z-index: 2; width: 815px; }
-        #pulley-top      { z-index: 2; width: 815px; }
-        #movable-body    { z-index: 2; width: 815px; }
-        
-        #wheel           { z-index: 3; width: 815px; } 
-        #tape-dispenser  { z-index: 1; width: 815px; } 
-        /* ========================================== */
+        #cart { z-index: 2; width: 815px; }
+        #pulley-bottom { z-index: 2; width: 815px; }
+        #pulley-top { z-index: 2; width: 815px; }
+        #movable-body { z-index: 2; width: 815px; }
+        #wheel { z-index: 3; width: 815px; } 
+        #tape-dispenser { z-index: 1; width: 815px; } 
 
         .controls { 
             position: relative; 
             z-index: 999;       
-            background-color: #2a2a2a; 
+            background-color: #f8f9fa; /* 淺灰控制台底色 */
+            border: 1px solid #e9ecef;
             padding: 15px; 
             border-radius: 8px; 
             display: flex; 
             align-items: center; 
             justify-content: center; 
+            flex-wrap: wrap;
             gap: 10px; 
         }
-        .controls input { width: 70px; padding: 6px; background: #444; border: 1px solid #666; color: white; border-radius: 4px; text-align: center; }
-        .controls button { padding: 6px 20px; background-color: #0076ff; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; }
+        .controls label { font-weight: bold; color: #333; }
+        .controls input { 
+            width: 70px; 
+            padding: 6px; 
+            background: #ffffff; 
+            border: 1px solid #ced4da; 
+            color: #333; 
+            border-radius: 4px; 
+            text-align: center; 
+            font-weight: bold;
+        }
+        .controls button { 
+            padding: 6px 20px; 
+            background-color: #0076ff; 
+            color: white; 
+            border: none; 
+            border-radius: 4px; 
+            cursor: pointer; 
+            font-weight: bold; 
+            transition: 0.2s; 
+        }
         .controls button:hover { background-color: #0055cc; }
 
-        /* 攝影機面板與膠帶視窗設定 */
-        .camera-panel { width: 300px; display: flex; flex-direction: column; gap: 15px; }
+        .camera-panel { 
+            width: 320px; 
+            display: flex; 
+            flex-direction: column; 
+            gap: 20px; 
+            max-width: 100%; 
+        }
+        
         .camera-screen { 
             height: 200px; 
-            background-color: #000000; 
+            background-color: #2c2c2c; /* 深灰色，不使用死黑，同時讓綠色字體凸顯 */
             border: 3px solid #555; 
             border-radius: 8px; 
             position: relative; 
@@ -114,78 +178,136 @@
             overflow: hidden; 
             padding: 0 10px;
         }
-        .rec-dot { position: absolute; top: 10px; right: 15px; color: red; font-weight: bold; font-size: 14px; animation: blink 1s infinite; z-index: 10;}
-        .speed-display { position: absolute; top: 10px; left: 15px; color: #00ff00; font-family: monospace; font-size: 14px; z-index: 10;}
+        .rec-dot { position: absolute; top: 10px; right: 15px; color: #ff4757; font-weight: bold; font-size: 14px; animation: blink 1s infinite; z-index: 10;}
+        .speed-display { position: absolute; top: 10px; left: 15px; color: #2ed573; font-family: monospace; font-size: 14px; z-index: 10;}
         @keyframes blink { 50% { opacity: 0; } }
 
-        /* 仿造 image_11b799.png 的軌道外觀 */
         .tape-track {
             width: 100%;
             height: 110px;
-            border-top: 18px solid #2a322c;
-            border-bottom: 18px solid #2a322c;
+            border-top: 18px solid #1e272e;
+            border-bottom: 18px solid #1e272e;
             border-radius: 12px;
             position: relative;
             overflow: hidden;
-            background-color: rgba(136, 136, 136, 0.2); /* 預設底色 */
+            background-color: rgba(136, 136, 136, 0.2); 
         }
         .tape-stripes { 
             width: 200%; 
             height: 100%; 
             transform: translateX(0); 
-            /* 背景將由 JavaScript 動態寫入 */
+        }
+
+        /* 底部版權宣告 */
+        /* 底部版權宣告與系徽排版 */
+        .site-footer {
+            background-color: #e9ecef; /* 淺灰背景 */
+            color: #6c757d; /* 灰色字體 */
+            padding: 20px;
+            font-size: 14px;
+            margin-top: auto; 
+            display: flex;
+            justify-content: center; /* 讓內容水平置中 */
+        }
+
+        .footer-content {
+            display: flex;
+            align-items: center; /* 讓圖片跟文字垂直置中對齊 */
+            gap: 20px; /* 圖片跟文字之間的距離 */
+            flex-wrap: wrap; /* 如果手機螢幕太小，自動換行 */
+            justify-content: center;
+        }
+
+        .footer-logo {
+            width: 70px; /* 系徽的大小，你可以根據需求調整這個數值 */
+            height: auto;
+        }
+
+        .footer-text {
+            text-align: left; /* 文字靠左對齊，放在圖片右邊比較好看 */
+            line-height: 1.6;
+        }
+
+        /* 手機版自動變成上下置中排列 */
+        @media (max-width: 600px) {
+            .footer-text {
+                text-align: center;
+            }
         }
     </style>
 </head>
 <body>
 
-    <div class="dashboard">
-        <div class="simulation-panel">
-            <h3 style="margin:0;">主控制台模擬</h3>
-            <div class="simulation-container">
-                
-                <img src="bg1.png" class="bg-layer" id="bg1">
-                <img src="bg2.png" class="bg-layer" id="bg2">
-                <img src="bg3.png" class="bg-layer" id="bg3">
+    <!-- 獨立的背景圖層 -->
+    <div class="page-bg"></div>
 
-                <svg id="line-canvas">
-                    <line id="line1" stroke="#000000" stroke-width="0.8" />
-                    <line id="line2" stroke="#000000" stroke-width="0.8" />
-                    <line id="line3" stroke="#000000" stroke-width="0.8" />
-                    <line id="line4" stroke="#000000" stroke-width="0.8" />
-                    <line id="line5" stroke="#000000" stroke-width="0.8" />
-                </svg>
+    <h1 class="main-title">Investigating the Effect of Pulling Velocity on the Formation of Tape Stripes</h1>
 
-                <img src="cart.png" class="part" id="cart">
-                <img src="pulley-bottom.png" class="part" id="pulley-bottom">
-                <img src="pulley-top.png" class="part" id="pulley-top">
-                <img src="movable-body.png" class="part" id="movable-body">
+    <div class="content-wrapper">
+        <div class="dashboard">
+            <!-- 左側/主控制台 -->
+            <div class="simulation-panel">
+                <h3 style="margin:0; color:#333;">Simulation Console</h3>
                 
-                <img src="wheel.png" class="part" id="wheel">
-                <img src="tape-dispenser.png" class="part" id="tape-dispenser">
+                <div class="simulation-container">
+                    <img src="bg1.png" class="bg-layer" id="bg1">
+                    <img src="bg2.png" class="bg-layer" id="bg2">
+                    <img src="bg3.png" class="bg-layer" id="bg3">
+
+                    <svg id="line-canvas">
+                        <line id="line1" stroke="#000000" stroke-width="0.8" />
+                        <line id="line2" stroke="#000000" stroke-width="0.8" />
+                        <line id="line3" stroke="#000000" stroke-width="0.8" />
+                        <line id="line4" stroke="#000000" stroke-width="0.8" />
+                        <line id="line5" stroke="#000000" stroke-width="0.8" />
+                    </svg>
+
+                    <img src="cart.png" class="part" id="cart">
+                    <img src="pulley-bottom.png" class="part" id="pulley-bottom">
+                    <img src="pulley-top.png" class="part" id="pulley-top">
+                    <img src="movable-body.png" class="part" id="movable-body">
+                    
+                    <img src="wheel.png" class="part" id="wheel">
+                    <img src="tape-dispenser.png" class="part" id="tape-dispenser">
+                </div>
+
+                <div class="controls">
+                    <label for="delayInput">Step Delay:</label>
+                    <input type="number" id="delayInput" value="212">
+                    <span style="color:#333; font-weight:bold;">ms</span>
+                    <button id="startBtn">Start</button>
+                </div>
             </div>
 
-            <div class="controls">
-                <label for="delayInput">步進延遲 (Delay)：</label>
-                <!-- 預設改為 212，落在 24~400 中間，以便預覽效果 -->
-                <input type="number" id="delayInput" value="212">
-                <span>ms</span>
-                <button id="startBtn">Start</button>
-            </div>
-        </div>
-
-        <div class="camera-panel">
-            <h3 style="margin:0;">微觀攝影機 (膠帶紋理)</h3>
-            <div class="camera-screen">
-                <div class="rec-dot">● REC</div>
-                <div class="speed-display" id="speed-display">0.00 cm/s</div>
-                <!-- 新增 tape-track 容器模擬 reference image 外觀 -->
-                <div class="tape-track">
-                    <div class="tape-stripes" id="tape-stripes"></div>
+            <!-- 右側/攝影機 -->
+            <div class="camera-panel">
+                <h3 style="margin:0; color:#333;">Micro-Camera</h3>
+                <div class="camera-screen">
+                    <div class="rec-dot">● REC</div>
+                    <div class="speed-display" id="speed-display">0.00 cm/s</div>
+                    <div class="tape-track">
+                        <div class="tape-stripes" id="tape-stripes"></div>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
+
+    <!-- 版權宣告區塊 -->
+    <!-- 版權宣告區塊 -->
+    <footer class="site-footer">
+        <div class="footer-content">
+            <!-- ★ 請記得把你的系徽圖片上傳到 GitHub，並把 src 裡面的檔名換成你的圖片名稱 ★ -->
+            <img src="ccu-logo.png" alt="CCU Physics Logo" class="footer-logo">
+            
+            <div class="footer-text">
+                &copy; 2026 Chang-Yu Wu (Web Developer), Zheng-Da Tsai, and Zhung-Rui Zhang.<br>
+                Advisor: Prof. Pi-Hui Tuan<br>
+                Final Project for General Physics Laboratory (II), National Chung Cheng University.
+                Prepared for the 2026 Joint Physics Education Meeting of ROC. All rights reserved.
+            </div>
+        </div>
+    </footer>
 
     <script>
         const delayInput = document.getElementById('delayInput');
@@ -200,7 +322,6 @@
         const tapeDispenser = document.getElementById('tape-dispenser');
         const tapeStripes = document.getElementById('tape-stripes');
 
-        // 固定點座標
         const motorX = 50, motorY = 270;               
         const tapeAnchorX = 737, tapeAnchorY = 147;   
         const frameAnchorX = 517, frameAnchorY =132; 
@@ -213,7 +334,6 @@
 
         const tapeDispX = 347, tapeDispY = -82;
 
-        // 會動的零件狀態
         let cartX = -70;            
         const cartY = 52;           
         let stopCartX = -170;       
@@ -226,34 +346,21 @@
         let isRunning = false;
         let timer = null;
 
-        // ★ 新增：根據 Delay 即時更新膠帶視覺效果 ★
         function updateTapeAppearance() {
             let delay = parseInt(delayInput.value) || 30;
-            
-            // 防呆保護：若輸入小於等於 0，自動修正為最低極限 1
             if (delay <= 0) delay = 1;
 
-            // 計算速度: cm/s = 4.625 / delay
             let speed = 4.625 / delay;
             speedDisplay.textContent = speed.toFixed(4) + ' cm/s';
 
             if (delay >= 400) {
-                // >= 400 時全白
                 tapeStripes.style.background = '#ffffff';
             } else if (delay <= 24) {
-                // <= 24 時全透明（最淺灰色且無白色）
                 tapeStripes.style.background = 'rgba(136, 136, 136, 0.1)';
             } else {
-                // 落在 (24, 400) 之間的反比變化
-                // 將 delay 範圍 24~400 映射到 0~1 的比例 (越慢=數值越大)
                 let ratio = (delay - 24) / (400 - 24); 
-                
-                let cycleLength = 40; // 每條紋理的循環總長度 (px)
-                // 1. 白色帶長度與 speed 反比 (與 delay 正比)
+                let cycleLength = 40; 
                 let whitePx = cycleLength * ratio; 
-                
-                // 2. 速度越快 (delay越小)，透明帶的透明度越明顯 (Alpha 值越低)
-                // delay 400 時 alpha = 0.9, delay 24 時 alpha = 0.2
                 let grayAlpha = 0.2 + (0.7 * ratio); 
                 let grayColor = `rgba(136, 136, 136, ${grayAlpha})`;
 
@@ -261,7 +368,6 @@
             }
         }
 
-        // 綁定輸入框事件，只要改變數值就更新視窗
         delayInput.addEventListener('input', updateTapeAppearance);
 
         function initPositions() {
@@ -280,13 +386,13 @@
             tapeDispenser.style.top = tapeDispY + 'px';
             
             drawAllLines();
-            updateTapeAppearance(); // 初始載入時也更新一次
+            updateTapeAppearance(); 
         }
 
         startBtn.addEventListener('click', () => {
             if (isRunning) {
                 isRunning = false;
-                startBtn.textContent = '開始';
+                startBtn.textContent = 'Start';
                 startBtn.style.backgroundColor = '#0076ff';
                 clearTimeout(timer);
             } else {
@@ -300,10 +406,9 @@
                 }
 
                 isRunning = true;
-                startBtn.textContent = '停止';
+                startBtn.textContent = 'Stop';
                 startBtn.style.backgroundColor = '#ff3b30';
                 
-                // 啟動前強制再抓一次 delay 並更新，避免使用者沒觸發 input
                 updateTapeAppearance(); 
                 runSimulation();
             }
@@ -324,7 +429,7 @@
                 movableX = 266 - (-70 - stopCartX);
                 wheelX = initialWheelX - (-70 - stopCartX); 
                 isRunning = false;
-                startBtn.textContent = '重新開始'; 
+                startBtn.textContent = 'Restart'; 
                 startBtn.style.backgroundColor = '#0076ff';
             }
 
