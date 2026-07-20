@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <title>膠帶台實驗儀表板</title>
+    <style>
+        body {
+            background-color: hsl(0, 0%, 100%);
+            color: #ffffff;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        .dashboard {
+            display: flex;
+            gap: 20px;
+            background-color: hwb(0 100% 0%);
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+        }
+
+        .simulation-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        /* 模擬裝置外框 */
+        .simulation-container {
+            position: relative;
+            width: 800px;  
+            height: 320px; 
+            border: 2px solid #121212;
+            border-radius: 8px;
+            overflow: visible;
+            background-color: #fffdfd; 
+        }
+
+        /* 背景與零件共用基礎設定 */
+        .bg-layer {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            pointer-events: none; 
+        }
+
+        .part {
+            position: absolute;
+            transform-origin: center center;
+            pointer-events: none; 
+        }
+        
+        #line-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+        }
+
+        /* ========================================== */
+        /* ★ 獨立圖層 (z-index) 控制區 ★               */
+        /* ========================================== */
+        #bg2 { z-index: 1; } 
+        #bg1 { z-index: 3; } 
+        #bg3 { z-index: 5; } 
+
+        #line-canvas { z-index: 4; }
+
+        #cart            { z-index: 2; width: 815px; }
+        #pulley-bottom   { z-index: 2; width: 815px; }
+        #pulley-top      { z-index: 2; width: 815px; }
+        #movable-body    { z-index: 2; width: 815px; }
+        
+        #wheel           { z-index: 3; width: 815px; } 
+        #tape-dispenser  { z-index: 1; width: 815px; } 
+        /* ========================================== */
+
+        .controls { 
+            position: relative; 
+            z-index: 999;       
+            background-color: #2a2a2a; 
+            padding: 15px; 
+            border-radius: 8px; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            gap: 10px; 
+        }
+        .controls input { width: 70px; padding: 6px; background: #444; border: 1px solid #666; color: white; border-radius: 4px; text-align: center; }
+        .controls button { padding: 6px 20px; background-color: #0076ff; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; }
+        .controls button:hover { background-color: #0055cc; }
+
+        /* 攝影機面板與膠帶視窗設定 */
+        .camera-panel { width: 300px; display: flex; flex-direction: column; gap: 15px; }
+        .camera-screen { 
+            height: 200px; 
+            background-color: #000000; 
+            border: 3px solid #555; 
+            border-radius: 8px; 
+            position: relative; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            overflow: hidden; 
+            padding: 0 10px;
+        }
+        .rec-dot { position: absolute; top: 10px; right: 15px; color: red; font-weight: bold; font-size: 14px; animation: blink 1s infinite; z-index: 10;}
+        .speed-display { position: absolute; top: 10px; left: 15px; color: #00ff00; font-family: monospace; font-size: 14px; z-index: 10;}
+        @keyframes blink { 50% { opacity: 0; } }
+
+        /* 仿造 image_11b799.png 的軌道外觀 */
+        .tape-track {
+            width: 100%;
+            height: 110px;
+            border-top: 18px solid #2a322c;
+            border-bottom: 18px solid #2a322c;
+            border-radius: 12px;
+            position: relative;
+            overflow: hidden;
+            background-color: rgba(136, 136, 136, 0.2); /* 預設底色 */
+        }
+        .tape-stripes { 
+            width: 200%; 
+            height: 100%; 
+            transform: translateX(0); 
+            /* 背景將由 JavaScript 動態寫入 */
+        }
+    </style>
+</head>
+<body>
+
+    <div class="dashboard">
+        <div class="simulation-panel">
+            <h3 style="margin:0;">主控制台模擬</h3>
+            <div class="simulation-container">
+                
+                <img src="bg1.png" class="bg-layer" id="bg1">
+                <img src="bg2.png" class="bg-layer" id="bg2">
+                <img src="bg3.png" class="bg-layer" id="bg3">
+
+                <svg id="line-canvas">
+                    <line id="line1" stroke="#000000" stroke-width="0.8" />
+                    <line id="line2" stroke="#000000" stroke-width="0.8" />
+                    <line id="line3" stroke="#000000" stroke-width="0.8" />
+                    <line id="line4" stroke="#000000" stroke-width="0.8" />
+                    <line id="line5" stroke="#000000" stroke-width="0.8" />
+                </svg>
+
+                <img src="cart.png" class="part" id="cart">
+                <img src="pulley-bottom.png" class="part" id="pulley-bottom">
+                <img src="pulley-top.png" class="part" id="pulley-top">
+                <img src="movable-body.png" class="part" id="movable-body">
+                
+                <img src="wheel.png" class="part" id="wheel">
+                <img src="tape-dispenser.png" class="part" id="tape-dispenser">
+            </div>
+
+            <div class="controls">
+                <label for="delayInput">步進延遲 (Delay)：</label>
+                <!-- 預設改為 212，落在 24~400 中間，以便預覽效果 -->
+                <input type="number" id="delayInput" value="212">
+                <span>ms</span>
+                <button id="startBtn">Start</button>
+            </div>
+        </div>
+
+        <div class="camera-panel">
+            <h3 style="margin:0;">微觀攝影機 (膠帶紋理)</h3>
+            <div class="camera-screen">
+                <div class="rec-dot">● REC</div>
+                <div class="speed-display" id="speed-display">0.00 cm/s</div>
+                <!-- 新增 tape-track 容器模擬 reference image 外觀 -->
+                <div class="tape-track">
+                    <div class="tape-stripes" id="tape-stripes"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const delayInput = document.getElementById('delayInput');
+        const startBtn = document.getElementById('startBtn');
+        const speedDisplay = document.getElementById('speed-display');
+        
+        const cart = document.getElementById('cart');
+        const pulleyBottom = document.getElementById('pulley-bottom');
+        const pulleyTop = document.getElementById('pulley-top');
+        const movableBody = document.getElementById('movable-body');
+        const wheel = document.getElementById('wheel');
+        const tapeDispenser = document.getElementById('tape-dispenser');
+        const tapeStripes = document.getElementById('tape-stripes');
+
+        // 固定點座標
+        const motorX = 50, motorY = 270;               
+        const tapeAnchorX = 737, tapeAnchorY = 147;   
+        const frameAnchorX = 517, frameAnchorY =132; 
+        const pBottomX = 75, pBottomY = 31;           
+        const pTopX = 96, pTopY = -64;                
+
+        const initialWheelX = 262; 
+        let wheelX = initialWheelX;  
+        const wheelY = -85;
+
+        const tapeDispX = 347, tapeDispY = -82;
+
+        // 會動的零件狀態
+        let cartX = -70;            
+        const cartY = 52;           
+        let stopCartX = -170;       
+        
+        let movableX = 266;         
+        const movableY = -85;       
+        
+        let fixedAngle = 0;         
+        let stripePos = 0;          
+        let isRunning = false;
+        let timer = null;
+
+        // ★ 新增：根據 Delay 即時更新膠帶視覺效果 ★
+        function updateTapeAppearance() {
+            let delay = parseInt(delayInput.value) || 30;
+            
+            // 防呆保護：若輸入小於等於 0，自動修正為最低極限 1
+            if (delay <= 0) delay = 1;
+
+            // 計算速度: cm/s = 4.625 / delay
+            let speed = 4.625 / delay;
+            speedDisplay.textContent = speed.toFixed(4) + ' cm/s';
+
+            if (delay >= 400) {
+                // >= 400 時全白
+                tapeStripes.style.background = '#ffffff';
+            } else if (delay <= 24) {
+                // <= 24 時全透明（最淺灰色且無白色）
+                tapeStripes.style.background = 'rgba(136, 136, 136, 0.1)';
+            } else {
+                // 落在 (24, 400) 之間的反比變化
+                // 將 delay 範圍 24~400 映射到 0~1 的比例 (越慢=數值越大)
+                let ratio = (delay - 24) / (400 - 24); 
+                
+                let cycleLength = 40; // 每條紋理的循環總長度 (px)
+                // 1. 白色帶長度與 speed 反比 (與 delay 正比)
+                let whitePx = cycleLength * ratio; 
+                
+                // 2. 速度越快 (delay越小)，透明帶的透明度越明顯 (Alpha 值越低)
+                // delay 400 時 alpha = 0.9, delay 24 時 alpha = 0.2
+                let grayAlpha = 0.2 + (0.7 * ratio); 
+                let grayColor = `rgba(136, 136, 136, ${grayAlpha})`;
+
+                tapeStripes.style.background = `repeating-linear-gradient(90deg, #ffffff, #ffffff ${whitePx}px, ${grayColor} ${whitePx}px, ${grayColor} ${cycleLength}px)`;
+            }
+        }
+
+        // 綁定輸入框事件，只要改變數值就更新視窗
+        delayInput.addEventListener('input', updateTapeAppearance);
+
+        function initPositions() {
+            cart.style.left = cartX + 'px';
+            cart.style.top = cartY + 'px';
+            pulleyBottom.style.left = pBottomX + 'px';
+            pulleyBottom.style.top = pBottomY + 'px';
+            pulleyTop.style.left = pTopX + 'px';
+            pulleyTop.style.top = pTopY + 'px';
+            movableBody.style.left = movableX + 'px';
+            movableBody.style.top = movableY + 'px';
+            
+            wheel.style.left = wheelX + 'px';
+            wheel.style.top = wheelY + 'px';
+            tapeDispenser.style.left = tapeDispX + 'px';
+            tapeDispenser.style.top = tapeDispY + 'px';
+            
+            drawAllLines();
+            updateTapeAppearance(); // 初始載入時也更新一次
+        }
+
+        startBtn.addEventListener('click', () => {
+            if (isRunning) {
+                isRunning = false;
+                startBtn.textContent = '開始';
+                startBtn.style.backgroundColor = '#0076ff';
+                clearTimeout(timer);
+            } else {
+                if (cartX <= stopCartX) {
+                    cartX = -70;            
+                    movableX = 266;
+                    wheelX = initialWheelX;  
+                    fixedAngle = 0;         
+                    stripePos = 0;          
+                    initPositions();        
+                }
+
+                isRunning = true;
+                startBtn.textContent = '停止';
+                startBtn.style.backgroundColor = '#ff3b30';
+                
+                // 啟動前強制再抓一次 delay 並更新，避免使用者沒觸發 input
+                updateTapeAppearance(); 
+                runSimulation();
+            }
+        });
+
+        function runSimulation() {
+            if (!isRunning) return;
+
+            cartX -= 2;             
+            movableX -= 2;          
+            wheelX -= 2;   
+
+            fixedAngle -= 5;        
+            stripePos -= 4; 
+
+            if (cartX <= stopCartX) {
+                cartX = stopCartX;
+                movableX = 266 - (-70 - stopCartX);
+                wheelX = initialWheelX - (-70 - stopCartX); 
+                isRunning = false;
+                startBtn.textContent = '重新開始'; 
+                startBtn.style.backgroundColor = '#0076ff';
+            }
+
+            cart.style.left = cartX + 'px';
+            movableBody.style.left = movableX + 'px';
+            wheel.style.left = wheelX + 'px'; 
+            
+            pulleyBottom.style.transform = `rotate(${-fixedAngle}deg)`;
+            pulleyTop.style.transform = `rotate(${fixedAngle}deg)`;
+            tapeDispenser.style.transform = `rotate(${fixedAngle}deg)`; 
+            wheel.style.transform = `rotate(${-fixedAngle}deg)`;        
+
+            tapeStripes.style.transform = `translateX(${stripePos % 40}px)`;
+
+            drawAllLines();
+
+            if (isRunning) {
+                let currentDelay = parseInt(delayInput.value) || 30;
+                timer = setTimeout(runSimulation, currentDelay);
+            }
+        }
+
+        function drawAllLines() {
+            const line1 = document.getElementById('line1');
+            const line2 = document.getElementById('line2');
+            const line3 = document.getElementById('line3');
+            const line4 = document.getElementById('line4');
+            const line5 = document.getElementById('line5');
+
+            updateSVGLine(line1, motorX, motorY, cartX + 400, cartY+220 );
+            updateSVGLine(line2, cartX + 436, cartY + 219, pBottomX + 407, pBottomY + 240);
+            updateSVGLine(line3, pTopX + 415, pTopY + 220, movableX + 400, movableY + 241);
+            updateSVGLine(line4, movableX + 444, movableY + 232, tapeAnchorX, tapeAnchorY);
+            updateSVGLine(line5, movableX + 402, movableY + 217, frameAnchorX, frameAnchorY);
+        }
+
+        function updateSVGLine(line, x1, y1, x2, y2) {
+            line.setAttribute('x1', x1);
+            line.setAttribute('y1', y1);
+            line.setAttribute('x2', x2);
+            line.setAttribute('y2', y2);
+        }
+
+        initPositions();
+    </script>
+</body>
+</html>
