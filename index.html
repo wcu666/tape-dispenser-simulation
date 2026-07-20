@@ -420,14 +420,21 @@
             speedDisplay.textContent = (speed*10).toFixed(4) + ' mm/s';
 
             if (delay >= 400) {
+                // 低速：全白 (Stick 狀態)
                 tapeStripes.style.background = '#ffffff';
             } else if (delay <= 24) {
-                tapeStripes.style.background = 'rgba(136, 136, 136, 0.1)';
+                // 高速：近乎全透明 (Slip 狀態)，保留極稀疏、極淡的痕跡防止突變
+                tapeStripes.style.background = 'linear-gradient(90deg, rgba(255,255,255,0.1) 0%, rgba(136,136,136,0.15) 100%)';
             } else {
+                // 中間速度：Stick-Slip 週期斑紋
                 let ratio = (delay - 24) / (400 - 24); 
-                let cycleLength = 40; 
+                let cycleLength = 30; // 稍微縮短週期長度，讓高拉速下的白條紋更密集、不易在結束時被擠出視窗
                 let whitePx = cycleLength * ratio; 
-                let grayAlpha = 0.2 + (0.7 * ratio); 
+                
+                // 確保白紋即使在極端狀況下也至少保有一點點寬度（例如 1.5px），不會直接消失
+                if (whitePx < 1.5) whitePx = 1.5; 
+                
+                let grayAlpha = 0.15 + (0.65 * ratio); 
                 let grayColor = `rgba(136, 136, 136, ${grayAlpha})`;
 
                 tapeStripes.style.background = `repeating-linear-gradient(90deg, #ffffff, #ffffff ${whitePx}px, ${grayColor} ${whitePx}px, ${grayColor} ${cycleLength}px)`;
@@ -513,7 +520,12 @@
                 cartX = stopCartX;
                 movableX = 266 - (-70 - stopCartX);
                 wheelX = initialWheelX - (-70 - stopCartX); 
+                
+                // 🌟 修正點：動畫結束時，維持平移進度在 0% 展現完整花紋
                 tapeStripes.style.transform = `translateX(0%)`;
+                
+                // 🌟 修正點：確保停止時，背景斑紋依據目前的 delay 進行最後一次完美渲染
+                updateTapeAppearance();
                 
                 isRunning = false;
                 startBtn.textContent = 'Start'; 
