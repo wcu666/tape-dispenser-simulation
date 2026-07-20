@@ -5,7 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Investigating the Effect of Pulling Velocity on the Formation of Tape Stripes</title>
     <style>
-        
+        /* ========================================== */
+        /* ★ 網頁整體背景控制區 (自訂背景與透明度) ★  */
+        /* ========================================== */
         .page-bg {
             position: fixed;
             top: 0;
@@ -13,18 +15,16 @@
             width: 100%;
             height: 100%;
             z-index: -1;
-           
             background-image: url('https://images.unsplash.com/photo-1579546929518-9e396f3cc809?q=80&w=2000'); 
             background-size: cover;
             background-position: center;
             background-repeat: no-repeat;
-          
             opacity: 0.2; 
         }
 
         body {
-            background-color: #f4f6f8; /* 淺灰底色，取代原本的黑色 */
-            color: #333333; /* 改為深灰色字體 */
+            background-color: #f4f6f8; 
+            color: #333333; 
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             margin: 0;
             display: flex;
@@ -32,17 +32,15 @@
             min-height: 100vh;
         }
 
-        /* 頂部標題 */
         .main-title {
             font-family: 'Times New Roman', Times, serif;
             text-align: center;
             margin: 30px 20px 10px 20px;
             font-size: 28px;
-            color: #1a252f; /* 深藍/黑色 */
+            color: #1a252f;
             text-shadow: 1px 1px 2px rgba(255,255,255,0.8);
         }
 
-        /* 主內容區塊，確保 Footer 永遠被推到最下方 */
         .content-wrapper {
             flex: 1;
             display: flex;
@@ -52,18 +50,18 @@
             box-sizing: border-box;
         }
 
-        /* 儀表板：讓面板並排 (row) */
+        /* 儀表板排版 (預設為電腦版：左右排列) */
         .dashboard {
             display: flex;
-            flex-direction: row; /* 確保主控台和監視器是左右排列 */
-            flex-wrap: wrap;     /* 如果螢幕太小才會換行 */
+            flex-direction: row; 
+            flex-wrap: wrap; 
             justify-content: center;
-            align-items: flex-start; /* 讓兩邊的面板頂部對齊 */
+            align-items: flex-start; 
             gap: 30px;
-            background-color: #ffffff; /* 白底，看起來更乾淨 */
+            background-color: #ffffff; 
             padding: 30px;
             border-radius: 12px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1); /* 柔和的陰影 */
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1); 
             max-width: 100%;
         }
 
@@ -71,21 +69,32 @@
             display: flex;
             flex-direction: column;
             gap: 20px;
+            align-items: center; /* 讓內容置中 */
+        }
+
+        /* ★ 新增：縮放控制外層，負責保留縮放後的空間 ★ */
+        .simulation-wrapper {
+            position: relative;
+            width: 800px;
+            height: 320px;
+            max-width: 100%;
+            margin: 0 auto;
         }
 
         /* 模擬裝置外框 */
         .simulation-container {
-            position: relative;
+            position: absolute;
+            top: 0;
+            left: 0;
             width: 800px;  
             height: 320px; 
-            border: 2px solid #ccc; /* 淺色邊框 */
+            border: 2px solid #ccc;
             border-radius: 8px;
-            /* ★ 關鍵修正：hidden 可以防止裡面的零件跑出去撐大網頁，解決框框移動的問題 ★ */
             overflow: hidden; 
             background-color: #ffffff; 
+            transform-origin: top left; /* 讓縮放以左上角為基準 */
         }
 
-        /* 背景與零件共用基礎設定 */
         .bg-layer {
             position: absolute;
             top: 0;
@@ -125,7 +134,7 @@
         .controls { 
             position: relative; 
             z-index: 999;       
-            background-color: #f8f9fa; /* 淺灰控制台底色 */
+            background-color: #f8f9fa; 
             border: 1px solid #e9ecef;
             padding: 15px; 
             border-radius: 8px; 
@@ -134,6 +143,8 @@
             justify-content: center; 
             flex-wrap: wrap;
             gap: 10px; 
+            width: 100%;
+            box-sizing: border-box;
         }
         .controls label { font-weight: bold; color: #333; }
         .controls input { 
@@ -168,7 +179,7 @@
         
         .camera-screen { 
             height: 200px; 
-            background-color: #2c2c2c; /* 深灰色，不使用死黑，同時讓綠色字體凸顯 */
+            background-color: #2c2c2c; 
             border: 3px solid #555; 
             border-radius: 8px; 
             position: relative; 
@@ -198,47 +209,81 @@
             transform: translateX(0); 
         }
 
-        /* 底部版權宣告 */
-        /* 底部版權宣告與系徽排版 */
         .site-footer {
-            background-color: #e9ecef; /* 淺灰背景 */
-            color: #6c757d; /* 灰色字體 */
+            background-color: #e9ecef; 
+            color: #6c757d; 
             padding: 20px;
             font-size: 14px;
             margin-top: auto; 
             display: flex;
-            justify-content: center; /* 讓內容水平置中 */
+            justify-content: center; 
         }
-
         .footer-content {
             display: flex;
-            align-items: center; /* 讓圖片跟文字垂直置中對齊 */
-            gap: 20px; /* 圖片跟文字之間的距離 */
-            flex-wrap: wrap; /* 如果手機螢幕太小，自動換行 */
+            align-items: center; 
+            gap: 20px; 
+            flex-wrap: wrap; 
             justify-content: center;
         }
-
         .footer-logo {
-            width: 70px; /* 系徽的大小，你可以根據需求調整這個數值 */
+            width: 70px; 
             height: auto;
         }
-
         .footer-text {
-            text-align: left; /* 文字靠左對齊，放在圖片右邊比較好看 */
+            text-align: left; 
             line-height: 1.6;
         }
 
-        /* 手機版自動變成上下置中排列 */
-        @media (max-width: 600px) {
-            .footer-text {
-                text-align: center;
+        /* ======================================= */
+        /* ★ 神級 RWD 響應式排版 (解決你的手機痛點) ★ */
+        /* ======================================= */
+        
+        /* 1. 當螢幕不夠寬時 (平板與直向手機) -> 強制上下排列，模擬器在上 */
+        @media (max-width: 1200px) {
+            .dashboard {
+                flex-direction: column;
+                align-items: center;
             }
+            .footer-text { text-align: center; }
+        }
+
+        /* 2. 手機螢幕逐步縮小，按比例微縮放模擬器 (消滅滾動條！) */
+        @media (max-width: 860px) {
+            .simulation-wrapper { width: 640px; height: 256px; }
+            .simulation-container { transform: scale(0.8); }
+        }
+        @media (max-width: 700px) {
+            .simulation-wrapper { width: 480px; height: 192px; }
+            .simulation-container { transform: scale(0.6); }
+        }
+        @media (max-width: 520px) {
+            .simulation-wrapper { width: 360px; height: 144px; }
+            .simulation-container { transform: scale(0.45); }
+        }
+        @media (max-width: 400px) {
+            .simulation-wrapper { width: 300px; height: 120px; }
+            .simulation-container { transform: scale(0.375); }
+        }
+
+        /* 3. 手機拿橫的 (Landscape) -> 恢復成左右排列，並微縮放以塞進螢幕高度 */
+        @media (max-height: 500px) and (orientation: landscape) {
+            .dashboard {
+                flex-direction: row; /* 強制左右排列 */
+                flex-wrap: nowrap; /* 不准換行 */
+                align-items: center;
+            }
+            /* 模擬器縮小到一半 */
+            .simulation-wrapper { width: 400px; height: 160px; }
+            .simulation-container { transform: scale(0.5); }
+            /* 攝影機也稍微變窄適應版面 */
+            .camera-panel { width: 260px; }
+            .camera-screen { height: 160px; }
+            .tape-track { height: 80px; }
         }
     </style>
 </head>
 <body>
 
-    <!-- 獨立的背景圖層 -->
     <div class="page-bg"></div>
 
     <h1 class="main-title">Investigating the Effect of Pulling Velocity on the Formation of Tape Stripes</h1>
@@ -247,28 +292,31 @@
         <div class="dashboard">
             <!-- 左側/主控制台 -->
             <div class="simulation-panel">
-                <h3 style="margin:0; color:#333;">Simulation Console</h3>
+                <h3 style="margin:0; color:#333; align-self: flex-start;">Simulation Console</h3>
                 
-                <div class="simulation-container">
-                    <img src="bg1.png" class="bg-layer" id="bg1">
-                    <img src="bg2.png" class="bg-layer" id="bg2">
-                    <img src="bg3.png" class="bg-layer" id="bg3">
+                <!-- ★ 用來完美縮放的 Wrapper ★ -->
+                <div class="simulation-wrapper">
+                    <div class="simulation-container">
+                        <img src="bg1.png" class="bg-layer" id="bg1">
+                        <img src="bg2.png" class="bg-layer" id="bg2">
+                        <img src="bg3.png" class="bg-layer" id="bg3">
 
-                    <svg id="line-canvas">
-                        <line id="line1" stroke="#000000" stroke-width="0.8" />
-                        <line id="line2" stroke="#000000" stroke-width="0.8" />
-                        <line id="line3" stroke="#000000" stroke-width="0.8" />
-                        <line id="line4" stroke="#000000" stroke-width="0.8" />
-                        <line id="line5" stroke="#000000" stroke-width="0.8" />
-                    </svg>
+                        <svg id="line-canvas">
+                            <line id="line1" stroke="#000000" stroke-width="0.8" />
+                            <line id="line2" stroke="#000000" stroke-width="0.8" />
+                            <line id="line3" stroke="#000000" stroke-width="0.8" />
+                            <line id="line4" stroke="#000000" stroke-width="0.8" />
+                            <line id="line5" stroke="#000000" stroke-width="0.8" />
+                        </svg>
 
-                    <img src="cart.png" class="part" id="cart">
-                    <img src="pulley-bottom.png" class="part" id="pulley-bottom">
-                    <img src="pulley-top.png" class="part" id="pulley-top">
-                    <img src="movable-body.png" class="part" id="movable-body">
-                    
-                    <img src="wheel.png" class="part" id="wheel">
-                    <img src="tape-dispenser.png" class="part" id="tape-dispenser">
+                        <img src="cart.png" class="part" id="cart">
+                        <img src="pulley-bottom.png" class="part" id="pulley-bottom">
+                        <img src="pulley-top.png" class="part" id="pulley-top">
+                        <img src="movable-body.png" class="part" id="movable-body">
+                        
+                        <img src="wheel.png" class="part" id="wheel">
+                        <img src="tape-dispenser.png" class="part" id="tape-dispenser">
+                    </div>
                 </div>
 
                 <div class="controls">
@@ -294,16 +342,13 @@
     </div>
 
     <!-- 版權宣告區塊 -->
-    <!-- 版權宣告區塊 -->
     <footer class="site-footer">
         <div class="footer-content">
-            <!-- ★ 請記得把你的系徽圖片上傳到 GitHub，並把 src 裡面的檔名換成你的圖片名稱 ★ -->
             <img src="ccu-logo.png" alt="CCU Physics Logo" class="footer-logo">
-            
             <div class="footer-text">
                 &copy; 2026 Chang-Yu Wu (Web Developer), Zheng-Da Tsai, and Zhung-Rui Zhang.<br>
                 Advisor: Prof. Pi-Hui Tuan<br>
-                Final Project for General Physics Laboratory (II), National Chung Cheng University.
+                Final Project for General Physics Laboratory (II), National Chung Cheng University.<br>
                 Prepared for the 2026 Joint Physics Education Meeting of ROC. All rights reserved.
             </div>
         </div>
