@@ -1,14 +1,14 @@
 # Investigation Influences of Pulling Speed on Stripe Pattern Formation of Peeled Tape
 
-🏫 **National Chung Cheng University | Final Project for Experiments on Fundamental Physics 2B | 2026 Joint Physics Education Meeting of ROC**
+ **National Chung Cheng University | Final Project for Experiments on Fundamental Physics 2B | 2026 Joint Physics Education Meeting of ROC**
 
-## 📖 About The Project
+##  About The Project
 
 This project features a web-based **Interactive Physics Simulator** designed to visualize the dynamic behavior and stripe pattern formation that occurs when transparent tape is peeled off at varying speeds. 
 
 The simulation allows users to adjust the pulling speed (via step delay) and observe the real-time transition of the tape's adhesive state, bridging the gap between theoretical macroscopic dynamics and microscopic polymer physics.
 
-## ✨ Key Features
+##  Key Features
 
 *   **Interactive Simulation Console:** A visual representation of the mechanical setup, including a motor, cart, pulleys, and a tape dispenser.
 *   **Adjustable Pulling Speed:** Users can input a "Step Delay" (in milliseconds) to control the speed of the motor. The system dynamically calculates and displays the resulting pulling speed in `mm/s`.
@@ -37,7 +37,7 @@ The simulator visualizes the two primary states of polymer adhesive during peeli
 
 ## Team & Credits
 
-*   
+
 *   **Researchers:** Chang-yu Wu, Zheng-Da Tsai, Zhung-Rui Zhang
 *   **Advisor:** Prof. Pi-Hui Tuan
 *   **Institution:** National Chung Cheng University
