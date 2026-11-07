@@ -41,7 +41,7 @@ The simulator visualizes the two primary states of polymer adhesive during peeli
 *   **Researchers:** Chang-yu Wu, Zheng-Da Tsai, Zhung-Rui Zhang
 *   **Advisor:** Prof. Pi-Hui Tuan
 *   **Institution:** National Chung Cheng University
-*   **Event:** Prepared for the 2026 Joint Physics Education Meeting of ROC
+*   **Event:** Prepared for the 2026 College Student Creative Physics Teaching Apparatus Implementation Competition
 
 ---
 *© 2026 Chang-Yu Wu, Zheng-Da Tsai, and Zhung-Rui Zhang. All rights reserved.*
