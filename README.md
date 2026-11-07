@@ -1,6 +1,6 @@
 # Investigation Influences of Pulling Speed on Stripe Pattern Formation of Peeled Tape
 
- **National Chung Cheng University | Final Project for Experiments on Fundamental Physics 2B | 2026 Joint Physics Education Meeting of ROC**
+ **National Chung Cheng University | Final Project for Experiments on Fundamental Physics 2B | 2026 College Student Creative Physics Teaching Apparatus Implementation Competition**
 
 ##  About The Project
 
